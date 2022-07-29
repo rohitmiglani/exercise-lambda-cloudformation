@@ -39,7 +39,7 @@ Resources:
           def lambda_handler(event, context):
             ssm = boto3.client('ssm')
             s3 = boto3.client('s3')
-            bucket = "ml-workshop-datalake-50"
+            bucket = "exercise-bucket-cloudformation"
             file_name = "/tmp/user_name.txt"
 
             result = ssm.get_parameter(Name="UserName")['Parameter']['Value']
