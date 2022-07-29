@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template for Lambda function.
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: exercise-lambda-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: exercise-lambda
+      Handler: index.lambda_handler
+      Description: Lambda function
+      MemorySize: 128
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+      Runtime: python3.9
+      Timeout: 60
+      Code:
+        ZipFile: |
+          import boto3
+
+          def lambda_handler(event, context):
+            ssm = boto3.client('ssm')
+            s3 = boto3.client('s3')
+            bucket = "ml-workshop-datalake-50"
+            file_name = "/tmp/user_name.txt"
+
+            result = ssm.get_parameter(Name="UserName")['Parameter']['Value']
+
+            print("UserName: {}".format(result))
+
+            with open(file_name, 'w') as data:
+              data.write("UserName: %s" % result)
+
+            response = s3.upload_file(file_name, bucket, "user_name.txt")
