@@ -4,13 +4,13 @@
 <br />
 
 
-###Pre-requisites:
+### Pre-requisites:
 Use your AWS Account
 
 # Initial Setup
 1) Open AWS System Manager Parameter Store from the AWS Console, and create the following parameter using Standard Tier of type String:
-   ####Name: UserName
-   ####Value: JohnDoe
+   #### Name: UserName
+   #### Value: JohnDoe
 2) From the AWS Console, create an S3 bucket .This S3 bucket will be passed as a Parameter in Cloudformation template 
 3) Open AWS Cloudformation service and create a Cloud formation Stack by uploading CFT_Lambda.yaml template in your aws Account
 4) Give a name to your stack and pass the S3 bucket name as an parameter in your Cloudformation which was created in step2
