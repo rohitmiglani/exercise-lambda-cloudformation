@@ -1,5 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Template for Lambda function.
+Parameters:
+  BucketName:
+    Type: String
 Resources:
   LambdaRole:
     Type: AWS::IAM::Role
@@ -25,6 +28,9 @@ Resources:
       FunctionName: exercise-lambda
       Handler: index.lambda_handler
       Description: Lambda function
+      Environment:
+        Variables:
+          BucketName: !Ref BucketName
       MemorySize: 128
       Role:
         Fn::GetAtt:
@@ -35,13 +41,20 @@ Resources:
       Code:
         ZipFile: |
           import boto3
-
+          import logging
+          import cfnresponse
+          import os
           def lambda_handler(event, context):
+            if event.get('RequestType') == 'Delete':
+              responseData = {}
+              responseData['message'] = "Goodbye from lambda"
+              logging.info('Sending %s to cloudformation', responseData['message'])
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+
             ssm = boto3.client('ssm')
             s3 = boto3.client('s3')
-            bucket = "exercise-bucket-cloudformation"
+            bucket = os.environ['BucketName']
             file_name = "/tmp/user_name.txt"
-
             result = ssm.get_parameter(Name="UserName")['Parameter']['Value']
 
             print("UserName: {}".format(result))
@@ -50,3 +63,15 @@ Resources:
               data.write("UserName: %s" % result)
 
             response = s3.upload_file(file_name, bucket, "user_name.txt")
+
+            responseValue = 120
+            responseData = {}
+            responseData['Data'] = response
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+
+  Primerinvoke:
+    Type: Custom::InvokeCustomLambda
+    DependsOn: LambdaFunction
+    Version: "1.0"
+    Properties:
+      ServiceToken: !GetAtt LambdaFunction.Arn
